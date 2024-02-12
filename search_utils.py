@@ -3,11 +3,12 @@ from elasticsearch import Elasticsearch, ConnectionError
 import os
 
 
-
 ELASTIC_CLOUD_ID = os.getenv('ELASTIC_CLOUD_ID')
 ELASTIC_API_KEY = os.getenv('ELASTIC_API_KEY')
 ELASTIC_INDEX = os.getenv('ELASTIC_INDEX')
 ELASTIC_MODEL = os.getenv('ELASTIC_MODEL')
+
+
 
 es = Elasticsearch(
   cloud_id=ELASTIC_CLOUD_ID,
@@ -17,7 +18,16 @@ es = Elasticsearch(
 
 
 
-def search_with_embedding(model_text, index=ELASTIC_INDEX, model_id=ELASTIC_MODEL, k=10, num_candidates=100):
+def search_with_embedding(model_text, match_queries, index=ELASTIC_INDEX, model_id=ELASTIC_MODEL, k=10, num_candidates=100):
+    
+
+    if not match_queries:
+        return {
+            "code": 400,
+            "message": "match_query가 없습니다.",
+            "data": None
+        }
+
     if not model_text:
         return {
             "code": 400,
@@ -26,6 +36,12 @@ def search_with_embedding(model_text, index=ELASTIC_INDEX, model_id=ELASTIC_MODE
         }
 
     query = {
+    "query": {
+        "bool": {
+            "should": match_queries,
+            "minimum_should_match": 1 
+            }
+        },
       "knn": {
         "field": "Vector",
         "query_vector_builder": {
