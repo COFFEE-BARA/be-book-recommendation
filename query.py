@@ -2,7 +2,23 @@
 from search_utils import search_with_embedding
 import json
 from open_ai import keyword_search
+from elasticapm.contrib.serverless.aws_lambda import capture_serverless
+import elasticapm
+import os
 
+SERVICE_NAME = os.getenv('SERVICE_NAME')
+SECRET_TOKEN = os.getenv('SECRET_TOKEN')
+SERVER_URL = os.getenv('SERVER_URL')
+
+# Elastic APM 구성
+client = elasticapm.Client({
+    'SERVICE_NAME': SERVICE_NAME,
+    'SECRET_TOKEN': SECRET_TOKEN,
+    'SERVER_URL': SERVER_URL,
+})
+
+
+@capture_serverless()
 def lambda_handler(event, context):
     # POST 요청의 바디에서 model_text 추출
     try:
