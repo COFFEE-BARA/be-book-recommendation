@@ -29,6 +29,12 @@ def lambda_handler(event, context):
     except json.JSONDecodeError:
         return {
             'statusCode': 400,
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': '*'
+            },
             'body': json.dumps({'message': 'Invalid JSON in request body'})
         }
     
@@ -39,7 +45,11 @@ def lambda_handler(event, context):
     return {
         'statusCode': result['code'],
         'headers': {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',  # Allow requests from any origin
+            'Access-Control-Allow-Headers': 'Content-Type',  # Allow headers
+            'Access-Control-Allow-Methods': '*'  # Allow all HTTP methods
+            # Add more CORS headers if needed
         },
         'body': json.dumps({
             'message': result['message'],
