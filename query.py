@@ -9,6 +9,7 @@ import os
 SERVICE_NAME = os.getenv('SERVICE_NAME')
 SECRET_TOKEN = os.getenv('SECRET_TOKEN')
 SERVER_URL = os.getenv('SERVER_URL')
+ENVIRONMENT = os.getenv('ENVIRONMENT')
 
 
 # Elastic APM 구성
@@ -16,6 +17,7 @@ client = elasticapm.Client({
     'SERVICE_NAME': SERVICE_NAME,
     'SECRET_TOKEN': SECRET_TOKEN,
     'SERVER_URL': SERVER_URL,
+    'ENVIRONMENT' : ENVIRONMENT
 })
 
 
