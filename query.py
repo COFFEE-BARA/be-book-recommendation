@@ -24,10 +24,11 @@ client = elasticapm.Client({
 
 @capture_serverless()
 def lambda_handler(event, context):
-    # POST 요청의 바디에서 model_text 추출
+
     try:
         body = json.loads(event['body'])
         model_text = body.get('query', '')
+        
     except json.JSONDecodeError:
         return {
             'statusCode': 400,
@@ -40,18 +41,36 @@ def lambda_handler(event, context):
             'body': json.dumps({'message': 'Invalid JSON in request body'})
         }
     
-    match_queries = keyword_search(model_text)
-    result = search_with_embedding(model_text, match_queries)
+    try:
+        # Elastic APM 트랜잭션 시작
+        client.begin_transaction("processing")
+        
+        match_queries = keyword_search(model_text)
+        result = search_with_embedding(model_text, match_queries)
 
-    # API Gateway 호환 응답 형식으로 변환
+        # Elastic APM 트랜잭션 종료
+        client.end_transaction('process_event', 'success')
+    
+    except Exception as e:
+        client.capture_exception()  # 예외 상황을 Elastic APM으로 보고
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'message': 'Error processing request'}),
+            'headers': {{
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': '*'
+            }}
+        }
+
     return {
         'statusCode': result['code'],
         'headers': {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',  # Allow requests from any origin
-            'Access-Control-Allow-Headers': 'Content-Type',  # Allow headers
-            'Access-Control-Allow-Methods': '*'  # Allow all HTTP methods
-            # Add more CORS headers if needed
+            'Access-Control-Allow-Origin': '*',  
+            'Access-Control-Allow-Headers': 'Content-Type', 
+            'Access-Control-Allow-Methods': '*'  
         },
         'body': json.dumps({
             'message': result['message'],
@@ -68,3 +87,4 @@ def lambda_handler(event, context):
 # }
 
 # print(lambda_handler(event , None))
+
